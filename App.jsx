@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
@@ -7,7 +7,7 @@ function App() {
     { id: 2, question: 'Who is the current president of the United States?', answer: 'Joe Biden' },
     { id: 3, question: 'Where is the Eiffel Tower located?', answer: 'Paris' },
     { id: 4, question: 'What is the symbol for Potassium?', answer: 'K' },
-    { id: 5, question: 'When was the Declaration of Independence signed?', answer: '1776' },
+    { id: 5, question: 'What year was the Declaration of Independence signed?', answer: '1776' },
     { id: 6, question: 'What is the largest country in the world?', answer: 'Russia' },
     { id: 7, question:'who wrote McBeth?', answer: 'Shakespeare'},
     { id: 8, question: 'what is the green pigment in plants called?', answer: 'chlorophyll'},
@@ -18,6 +18,17 @@ function App() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [userGuess, setUserGuess] = useState('');
+  const [guessResult, setGuessResult] = useState('');
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+
+
+  useEffect(() => {
+    setGuessResult('');
+    setUserGuess('');
+  }, [currentIndex, isFlipped]);
+
 
   const toggleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -26,6 +37,33 @@ function App() {
   const nextFlashcard = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % initialFlashcards.length);
     setIsFlipped(false);
+  };
+
+  const previousFlashcard = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? initialFlashcards.length - 1 : prevIndex - 1
+    );
+    setIsFlipped(false);
+  };
+
+  const handleGuessSubmit = () => {
+    const correctAnswer = initialFlashcards[currentIndex].answer.toLowerCase();
+    const userGuessLower = userGuess.toLowerCase();
+
+    if (!isFlipped) {
+      // Check if the card is not flipped (showing the question)
+      if (userGuessLower === correctAnswer && guessResult !== 'Correct!') {
+        setCurrentStreak((prevStreak) => prevStreak + 1);
+        if (currentStreak + 1 > longestStreak) {
+          // Update the longest streak
+          setLongestStreak(currentStreak + 1);
+        }
+        setGuessResult('Correct!');
+      } else {
+        setGuessResult('Incorrect. Try again.');
+        setCurrentStreak(0);
+      }
+    }
   };
 
   return (
@@ -40,6 +78,18 @@ function App() {
           </div>
         </div>
       </div>
+      <input
+        type="text"
+        placeholder="Your guess"
+        value={userGuess}
+        onChange={(e) => setUserGuess(e.target.value)}
+        disabled={isFlipped}
+      />
+      <button className="submit-button" onClick={handleGuessSubmit} disabled={isFlipped}>Submit Guess</button>
+      {guessResult && <p>{guessResult}</p>}
+      <p>Current Streak: {currentStreak}</p> 
+      <p>Longest Streak: {longestStreak}</p>
+      <button onClick={previousFlashcard}>Previous</button>
       <button onClick={nextFlashcard}>Next</button>
       <p>Number of Fun Facts: {initialFlashcards.length}</p>
     </div>
